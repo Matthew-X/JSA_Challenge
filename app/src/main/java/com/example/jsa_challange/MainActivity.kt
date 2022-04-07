@@ -15,6 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -22,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,7 +36,10 @@ import androidx.compose.ui.unit.sp
 import com.example.jsa_challange.ui.theme.JSA_ChallangeTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.core.content.ContextCompat.startActivity
 import retrofit2.Call
 import retrofit2.Callback
@@ -57,6 +63,7 @@ private var userInfoList = mutableStateListOf<Repo>()
 
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
+    @ExperimentalComposeUiApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -79,6 +86,7 @@ class MainActivity : ComponentActivity() {
 
 // TopBar, MainContent have been put into one Scaffold for easier use.
 
+@ExperimentalComposeUiApi
 @ExperimentalMaterial3Api
 @Composable
 fun GetScaffold(){
@@ -97,6 +105,7 @@ fun GetScaffold(){
 // impossible to reach it once the user's repos list makes LazyColumn stretch higher than phone's
 // screen.
 
+@ExperimentalComposeUiApi
 @Composable
 fun MainContent(){
     Box(
@@ -120,19 +129,23 @@ fun MainContent(){
 // I made custom SearchView in order to be able to resize it's height to make button and SearchView
 // have the same height and make them both look ergonomic and appealing to the user's eye.
 
+@ExperimentalComposeUiApi
 @Composable
 fun SearchView(
 
     // PlaceHolder works as a placeholder to hint to the user where to type.
 
-    placeholderText: String = "Search",
+    placeholderText: String = stringResource(R.string.place_holder_text),
     context: Context = LocalContext.current
 ) {
 
     // fetchRepos works as a command that updates userInfoList that contains links details and
     // names of the Repos that it will receive upon request to the server.
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     fun fetchRepos(user: String){
+        keyboardController?.hide()
         val response = Retrofit(user).repos
         response.enqueue(object : Callback<List<Repo>> {
             override fun onResponse(call: Call<List<Repo>>?, response: Response<List<Repo>>?) {
@@ -181,6 +194,7 @@ fun SearchView(
             // Button that upon pressing will call function fetchRepos and will update the
             // userInfoList therefore updating LazyColumn that displays user's information.
 
+
             Button(onClick = {
                 if(text != ""){
                     fetchRepos(text)
@@ -188,7 +202,8 @@ fun SearchView(
                              },
                 modifier = Modifier
                     .padding(5.dp, 0.dp, 0.dp, 5.dp)
-            ){ Text(text = "Fetch Repos") }
+            ){ Text(text = stringResource(R.string.search_button_text)) }
+
 
             BasicTextField(
                 value = text,
@@ -208,7 +223,7 @@ fun SearchView(
                     .padding(5.dp)
                     .clip(shape = RoundedCornerShape(100.dp))
                     .align(Alignment.CenterVertically),
-                textStyle = TextStyle(color = Color.White, fontSize = 18.sp),
+                textStyle = TextStyle(color = MaterialTheme.colorScheme.onBackground, fontSize = 18.sp),
                 singleLine = true,
                 decorationBox = { innerTextField ->
                     Row(
@@ -256,7 +271,16 @@ fun SearchView(
                             )
                         }
                     }
-                }
+                },
+
+                // Hiding keyboard on pressing "done" button
+
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        fetchRepos(text)
+                    }
+                )
             )
         }
     }
@@ -347,7 +371,7 @@ fun UserListItem(user : Repo){
                             // from "hint text" to the description text and vice versa.
 
                             if (!isExpanded){
-                                description.swapList(listOf("Press here for details"))
+                                description.swapList(listOf(stringResource(R.string.details_button)))
                             }else{
                                 description.swapList(listOf(user.description))
                             }
@@ -405,7 +429,7 @@ fun TopBar() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Git User Repo List",
+                    text = stringResource(R.string.top_bar_text),
                     style = MaterialTheme.typography.headlineSmall,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.inverseOnSurface
@@ -423,6 +447,7 @@ fun TopBar() {
 // Application, but it broke once I added "systemUiController" library as for some reason it was
 // breaking it's sandbox or some sort's disabling real time updating e.t.c
 
+@ExperimentalComposeUiApi
 @Preview
 @ExperimentalMaterial3Api
 @Composable

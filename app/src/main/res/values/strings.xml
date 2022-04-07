@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">JSA_Challange</string>
+    <string name="app_name">JSA_Challenge</string>
+    <string name="place_holder_text">Search</string>
+    <string name="search_button_text">Fetch Repos</string>
+    <string name="details_button">Press here for details</string>
+    <string name="top_bar_text">Git User Repo List</string>
 </resources>
